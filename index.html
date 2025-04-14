@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognition.X - Neural Network Visualization</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+        }
+        
+        .node {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+        
+        .connection {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            transform-origin: left center;
+        }
+
+        .neural-container {
+            position: relative;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-black text-white">
+    <div class="container mx-auto px-4 py-8">
+        <header class="glass-morphism p-6 mb-8">
+            <h1 class="text-3xl font-bold mb-2">Cognition.X</h1>
+            <p class="text-gray-300">Neural Network Swarm Visualization</p>
+        </header>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="glass-morphism p-6">
+                <h2 class="text-xl font-semibold mb-4">Swarm Controls</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-2">Swarm Size</label>
+                        <input type="range" min="10" max="100" value="50" class="w-full" id="swarmSize">
+                    </div>
+                    <div>
+                        <label class="block mb-2">Connection Density</label>
+                        <input type="range" min="1" max="10" value="5" class="w-full" id="connectionDensity">
+                    </div>
+                    <button class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded" onclick="initializeSwarm()">
+                        Initialize Swarm
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-morphism p-6">
+                <h2 class="text-xl font-semibold mb-4">Swarm Metrics</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-300">Active Nodes</p>
+                        <p class="text-2xl" id="activeNodes">0</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-300">Connections</p>
+                        <p class="text-2xl" id="connectionCount">0</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-300">Processing Power</p>
+                        <p class="text-2xl" id="processingPower">0%</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-300">Efficiency</p>
+                        <p class="text-2xl" id="efficiency">0%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-morphism mt-8 p-6">
+            <h2 class="text-xl font-semibold mb-4">Neural Network Visualization</h2>
+            <div class="neural-container" id="neuralContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let nodes = [];
+        let connections = [];
+
+        function initializeSwarm() {
+            const container = document.getElementById('neuralContainer');
+            container.innerHTML = '';
+            nodes = [];
+            connections = [];
+
+            const swarmSize = document.getElementById('swarmSize').value;
+            const connectionDensity = document.getElementById('connectionDensity').value;
+
+            // Create nodes
+            for (let i = 0; i < swarmSize; i++) {
+                const node = document.createElement('div');
+                node.className = 'node pulse';
+                node.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                node.style.left = `${Math.random() * 90}%`;
+                node.style.top = `${Math.random() * 90}%`;
+                container.appendChild(node);
+                nodes.push(node);
+            }
+
+            // Create connections
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = 0; j < connectionDensity; j++) {
+                    const targetIndex = Math.floor(Math.random() * nodes.length);
+                    if (targetIndex !== i) {
+                        const connection = createConnection(nodes[i], nodes[targetIndex]);
+                        container.appendChild(connection);
+                        connections.push(connection);
+                    }
+                }
+            }
+
+            updateMetrics();
+        }
+
+        function createConnection(node1, node2) {
+            const connection = document.createElement('div');
+            connection.className = 'connection';
+            
+            const x1 = parseFloat(node1.style.left);
+            const y1 = parseFloat(node1.style.top);
+            const x2 = parseFloat(node2.style.left);
+            const y2 = parseFloat(node2.style.top);
+            
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            connection.style.width = `${length}%`;
+            connection.style.left = `${x1}%`;
+            connection.style.top = `${y1}%`;
+            connection.style.transform = `rotate(${angle}deg)`;
+            
+            return connection;
+        }
+
+        function updateMetrics() {
+            document.getElementById('activeNodes').textContent = nodes.length;
+            document.getElementById('connectionCount').textContent = connections.length;
+            document.getElementById('processingPower').textContent = 
+                `${Math.round((nodes.length / 100) * 100)}%`;
+            document.getElementById('efficiency').textContent = 
+                `${Math.round((connections.length / (nodes.length * nodes.length)) * 100)}%`;
+        }
+
+        // Initialize on load
+        window.onload = initializeSwarm;
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
